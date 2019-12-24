@@ -1,0 +1,14 @@
+bridge:
+  upstreams:
+    - channel: chan
+      client:
+        host: upstream
+        port: 6379
+        password: password
+
+  downstreams:
+    - channel: chan
+      client:
+        host: downstream
+        port: 6379
+        password: password

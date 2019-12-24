@@ -1,0 +1,32 @@
+version: "3.2"
+
+networks:
+  redis:
+
+services:
+  bridge:
+    build: .
+    environment:
+      BRIDGE_CONFIG: "/etc/bridge/config/one_up_one_down.yaml"
+    volumes:
+      - "./examples:/etc/bridge/config"
+    networks:
+      - redis
+
+  upstream:
+    image: bitnami/redis:4.0
+    environment:
+      REDIS_PASSWORD: "password"
+    ports:
+      - "6379:6379"
+    networks:
+      - redis
+
+  downstream:
+    image: bitnami/redis:4.0
+    environment:
+      REDIS_PASSWORD: "password"
+    ports:
+      - "6389:6379"
+    networks:
+      - redis
