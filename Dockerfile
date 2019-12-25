@@ -5,10 +5,10 @@ COPY . .
 
 RUN GO111MODULE=on go get
 RUN GO111MODULE=on GOOS=linux GOARCH=amd64 go build -ldflags="-w -s"
-RUN chmod +x /go/src/app/redis-queue-bridge
+RUN chmod +x /go/src/app/gefyra
 
 FROM debian:buster-slim
 
-COPY --from=build /go/src/app/redis-queue-bridge /usr/local/bin/redis-queue-bridge
-RUN mkdir -p /etc/bridge/config
-ENTRYPOINT [ "redis-queue-bridge" ]
+COPY --from=build /go/src/app/gefyra /usr/local/bin/gefyra
+RUN mkdir -p /etc/gefyra/config
+ENTRYPOINT [ "gefyra" ]

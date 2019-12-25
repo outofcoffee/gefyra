@@ -5,11 +5,12 @@ networks:
 
 services:
   bridge:
+    image: outofcoffee/gefyra
     build: .
     environment:
-      BRIDGE_CONFIG: "/etc/bridge/config/one_up_one_down.yaml"
+      BRIDGE_CONFIG: "/etc/gefyra/config/one_up_one_down.yaml"
     volumes:
-      - "./examples:/etc/bridge/config"
+      - "./examples:/etc/gefyra/config"
     networks:
       - redis
 

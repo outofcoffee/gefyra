@@ -1,4 +1,4 @@
-module github.com/outofcoffee/redis-queue-bridge
+module github.com/outofcoffee/gefyra
 
 go 1.13
 

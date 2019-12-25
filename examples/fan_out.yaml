@@ -1,5 +1,5 @@
 # Connect to two instances of Redis running at 'upstream' and 'downstream' hosts respectively.
-# Propagate from a single upstream queue to a single downstream queue in a different Redis server.
+# Propagate from a single upstream queue to multiple downstream queues in a different Redis server.
 bridge:
   upstreams:
     - channel: chan
@@ -9,7 +9,12 @@ bridge:
         password: password
 
   downstreams:
-    - channel: chan
+    - channel: chan-one
+      client:
+        host: downstream
+        port: 6379
+        password: password
+    - channel: chan-two
       client:
         host: downstream
         port: 6379
