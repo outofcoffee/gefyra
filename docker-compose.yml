@@ -5,7 +5,7 @@ networks:
 
 services:
   bridge:
-    image: outofcoffee/gefyra
+    image: outofcoffee/gefyra:${IMAGE_TAG:-latest}
     build: .
     environment:
       BRIDGE_CONFIG: "/etc/gefyra/config/one_up_one_down.yaml"

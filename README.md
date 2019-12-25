@@ -17,6 +17,8 @@ Build and run:
 
     docker-compose up --build
 
+> For other architectures, see the [multiarchitecture](./docs/multiarch.md) documentation.
+
 You should see something similar to the following:
 
 ```bash
