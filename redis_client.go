@@ -13,9 +13,33 @@ type clientConfig struct {
 	Password string
 }
 
-type sideConfig struct {
-	Client  clientConfig
-	Channel string
+func cleanup(b bridge) {
+	for _, upstream := range b.Upstreams {
+		_ = upstream.Client.Close()
+	}
+	for _, downstream := range b.Downstreams {
+		_ = downstream.Client.Close()
+	}
+}
+
+func connect(config bridgeConfig) (upstreams []side, downstreams []side) {
+	log.Print("connecting to upstreams")
+	for _, c := range config.Upstreams {
+		upstreams = append(upstreams, side{
+			Config: c,
+			Client: connectSide(c),
+		})
+	}
+
+	log.Print("connecting to downstreams")
+	for _, c := range config.Downstreams {
+		downstreams = append(downstreams, side{
+			Config: c,
+			Client: connectSide(c),
+		})
+	}
+
+	return upstreams, downstreams
 }
 
 func connectSide(config sideConfig) *redis.Client {

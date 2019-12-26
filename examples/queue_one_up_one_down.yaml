@@ -2,14 +2,16 @@
 # Propagate from a single upstream queue to a single downstream queue in a different Redis server.
 bridge:
   upstreams:
-    - channel: chan
+    - name: chan
+      type: pubsub
       client:
         host: upstream
         port: 6379
         password: password
 
   downstreams:
-    - channel: chan
+    - name: chan
+      type: pubsub
       client:
         host: downstream
         port: 6379

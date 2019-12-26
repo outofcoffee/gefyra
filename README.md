@@ -1,7 +1,8 @@
-gefyra - a Redis Queue Bridge
-=============================
+gefyra - a redis bridge for queues and lists
+============================================
 
-* Forwards messages from one (or more) Redis queues to one (or more) other queues
+* Forwards messages from one (or more) queues/lists to one (or more) other queues/lists
+* Queues/lists can be on same or different Redis servers
 * Simple configuration
 * Lightweight, efficient, written in Go
 

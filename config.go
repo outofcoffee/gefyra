@@ -17,6 +17,19 @@ type bridgeConfig struct {
 	Downstreams []sideConfig
 }
 
+type sideConfig struct {
+	Client clientConfig
+	Name   string
+	Type   sideType
+}
+
+type sideType string
+
+const (
+	PubSub sideType = "pubsub"
+	List            = "list"
+)
+
 func loadConfig() bridgeConfig {
 	var configFile string
 	if value, ok := os.LookupEnv("BRIDGE_CONFIG"); ok {
@@ -40,14 +53,19 @@ func loadConfig() bridgeConfig {
 
 func normalise(config bridgeConfig) {
 	for _, c := range config.Upstreams {
-		if c.Client.Port == 0 {
-			c.Client.Port = 6379
-		}
+		normaliseConfig(c)
 	}
 	for _, c := range config.Downstreams {
-		if c.Client.Port == 0 {
-			c.Client.Port = 6379
-		}
+		normaliseConfig(c)
+	}
+}
+
+func normaliseConfig(c sideConfig) {
+	if c.Client.Port == 0 {
+		c.Client.Port = 6379
+	}
+	if len(c.Type) == 0 {
+		panic("bridge side type not set")
 	}
 }
 
@@ -56,7 +74,7 @@ func describeClient(config sideConfig) string {
 }
 
 func describeSide(config sideConfig) string {
-	return fmt.Sprintf("%v/%v", describeClient(config), config.Channel)
+	return fmt.Sprintf("%v/%v=%v", describeClient(config), config.Type, config.Name)
 }
 
 func describeBridge(b bridge) string {

@@ -1,35 +1,31 @@
 package main
 
 import (
-	"github.com/go-redis/redis"
 	"log"
 	"sync"
 )
 
-func bridgeChannels(wg *sync.WaitGroup, b bridge) {
+func bridgeUp(wg *sync.WaitGroup, b bridge) {
 	log.Printf("starting bridge %v", describeBridge(b))
 	for _, upstream := range b.Upstreams {
-		wg.Add(1)
-		pubSub := upstream.Client.Subscribe(upstream.Config.Channel)
-
-		go func() {
-			defer wg.Done()
-			for {
-				message, err := pubSub.ReceiveMessage()
-				if err != nil {
-					log.Printf("failed to receive message from %v", describeSide(upstream.Config))
-					continue
-				}
-				log.Printf("message received from upstream %v: %v", describeSide(upstream.Config), message.Payload)
-				forward(message, b.Downstreams)
-			}
-		}()
+		log.Printf("listening to %v", describeSide(upstream.Config))
+		switch upstream.Config.Type {
+		case PubSub:
+			bridgeChannel(wg, upstream, b)
+		case List:
+			bridgeList(wg, upstream, b)
+		}
 	}
 }
 
-func forward(message *redis.Message, downstreams []side) {
+func forward(message string, downstreams []side) {
 	for _, downstream := range downstreams {
 		log.Printf("forwarding message to downstream %v", describeSide(downstream.Config))
-		downstream.Client.Publish(downstream.Config.Channel, message.Payload)
+		switch downstream.Config.Type {
+		case PubSub:
+			forwardChannel(message, downstream)
+		case List:
+			forwardList(message, downstream)
+		}
 	}
 }
