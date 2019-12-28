@@ -13,12 +13,14 @@ type clientConfig struct {
 	Password string
 }
 
-func cleanup(b bridge) {
-	for _, upstream := range b.Upstreams {
-		_ = upstream.Client.Close()
-	}
-	for _, downstream := range b.Downstreams {
-		_ = downstream.Client.Close()
+func cleanup(bridges []bridge) {
+	for _, b := range bridges {
+		for _, upstream := range b.Upstreams {
+			_ = upstream.Client.Close()
+		}
+		for _, downstream := range b.Downstreams {
+			_ = downstream.Client.Close()
+		}
 	}
 }
 

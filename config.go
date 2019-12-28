@@ -9,7 +9,7 @@ import (
 )
 
 type configWrapper struct {
-	Bridge bridgeConfig
+	Bridges map[string]bridgeConfig
 }
 
 type bridgeConfig struct {
@@ -30,7 +30,7 @@ const (
 	List            = "list"
 )
 
-func loadConfig() bridgeConfig {
+func loadConfig() map[string]bridgeConfig {
 	var configFile string
 	if value, ok := os.LookupEnv("BRIDGE_CONFIG"); ok {
 		configFile = value
@@ -45,18 +45,20 @@ func loadConfig() bridgeConfig {
 	err = yaml.Unmarshal([]byte(yamlFile), &wrapper)
 	fatalIfError(err, "failed to parse config")
 
-	config := wrapper.Bridge
-	normalise(config)
-	log.Printf("loaded %v upstream(s) and %v downstream(s)", len(config.Upstreams), len(config.Downstreams))
-	return config
+	bridges := wrapper.Bridges
+	normalise(bridges)
+	log.Printf("loaded %v bridge(s)", len(bridges))
+	return bridges
 }
 
-func normalise(config bridgeConfig) {
-	for _, c := range config.Upstreams {
-		normaliseConfig(c)
-	}
-	for _, c := range config.Downstreams {
-		normaliseConfig(c)
+func normalise(bridges map[string]bridgeConfig) {
+	for _, config := range bridges {
+		for _, c := range config.Upstreams {
+			normaliseConfig(c)
+		}
+		for _, c := range config.Downstreams {
+			normaliseConfig(c)
+		}
 	}
 }
 

@@ -1,18 +1,19 @@
 # Connect to a single instance of Redis exposed on localhost.
 # Propagate from a single upstream queue to a single downstream queue in the same Redis server.
-bridge:
-  upstreams:
-    - name: chan-in
-      type: list
-      client:
-        host: localhost
-        port: 6379
-        password: password
+bridges:
+  local-test:
+    upstreams:
+      - name: input-list
+        type: list
+        client:
+          host: localhost
+          port: 6379
+          password: password
 
-  downstreams:
-    - name: chan-out
-      type: list
-      client:
-        host: localhost
-        port: 6379
-        password: password
+    downstreams:
+      - name: output-list
+        type: list
+        client:
+          host: localhost
+          port: 6379
+          password: password

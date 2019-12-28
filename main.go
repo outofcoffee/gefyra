@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/go-redis/redis"
+	"log"
 	"sync"
 )
 
@@ -18,17 +19,22 @@ type bridge struct {
 var bridges []bridge
 
 func main() {
-	config := loadConfig()
+	bridgeConfigs := loadConfig()
 
-	upstreams, downstreams := connect(config)
-	b := bridge{
-		Upstreams:   upstreams,
-		Downstreams: downstreams,
+	for bridgeName, bridgeConfig := range bridgeConfigs {
+		log.Printf("bridge %v has %v upstream(s) and %v downstream(s)", bridgeName, len(bridgeConfig.Upstreams), len(bridgeConfig.Downstreams))
+		upstreams, downstreams := connect(bridgeConfig)
+		b := bridge{
+			Upstreams:   upstreams,
+			Downstreams: downstreams,
+		}
+		bridges = append(bridges, b)
 	}
-	bridges = append(bridges, b)
-	defer cleanup(b)
+	defer cleanup(bridges)
 
 	var wg = sync.WaitGroup{}
-	bridgeUp(&wg, b)
+	for _, b := range bridges {
+		bridgeUp(&wg, b)
+	}
 	wg.Wait()
 }

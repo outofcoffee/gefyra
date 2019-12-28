@@ -45,14 +45,14 @@ Subscribe to downstream:
     docker run --rm -it --network gefyra_redis bitnami/redis:4.0 redis-cli \
       -h downstream \
       -a password \
-      SUBSCRIBE chan
+      SUBSCRIBE output-chan
 
 Publish from upstream:
 
     docker run --rm -it --network gefyra_redis bitnami/redis:4.0 redis-cli \
       -h upstream \
       -a password \
-      PUBLISH chan hello
+      PUBLISH input-chan hello
 
 ---
 
