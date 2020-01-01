@@ -1,5 +1,5 @@
 # Connect to a single instance of Redis exposed on localhost.
-# Propagate from a single upstream queue to a single downstream queue in the same Redis server.
+# Propagate from a single upstream channel to a single downstream channel in the same Redis server.
 bridges:
   local-test:
     upstreams:

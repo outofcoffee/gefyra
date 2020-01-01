@@ -1,5 +1,5 @@
 # Connect to two instances of Redis running at 'upstream' and 'downstream' hosts respectively.
-# Propagate from a single upstream queue to multiple downstream queues in a different Redis server.
+# Propagate from a single upstream channel to multiple downstream channels in a different Redis server.
 bridges:
   fan-out:
     upstreams:

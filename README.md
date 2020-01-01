@@ -1,8 +1,8 @@
-gefyra - a redis bridge for queues and lists
+gefyra - a redis bridge for channels and lists
 ============================================
 
-* Forwards messages from one (or more) queues/lists to one (or more) other queues/lists
-* Queues/lists can be on same or different Redis servers
+* Forwards messages from one (or more) channels/lists to one (or more) other channels/lists
+* Channels/lists can be on same or different Redis servers
 * Simple configuration
 * Lightweight, efficient, written in Go
 
@@ -11,6 +11,19 @@ gefyra - a redis bridge for queues and lists
     docker run --rm -it -v /path/to/config/dir:/opt/gefyra/config outofcoffee/gefyra
 
 See [example](./examples) configurations.
+
+## Supported modes
+
+The following objects can be bridged:
+
+| Upstream object | Downstream object | Same server? | Different server? |
+|-----------------|-------------------|--------------|-------------------|
+| pubsub channel  | pubsub channel    | Yes          | Yes               |
+| pubsub channel  | list              | Yes          | Yes               |
+| list            | pubsub channel    | Yes          | Yes               |
+| list            | list              | Yes          | Yes               |
+
+---
 
 ## Build and run
 
