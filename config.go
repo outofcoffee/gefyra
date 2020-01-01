@@ -18,7 +18,7 @@ type bridgeConfig struct {
 }
 
 type sideConfig struct {
-	Client clientConfig
+	Server serverConfig
 	Name   string
 	Type   sideType
 }
@@ -63,8 +63,8 @@ func normalise(bridges map[string]bridgeConfig) {
 }
 
 func normaliseConfig(c sideConfig) {
-	if c.Client.Port == 0 {
-		c.Client.Port = 6379
+	if c.Server.Port == 0 {
+		c.Server.Port = 6379
 	}
 	if len(c.Type) == 0 {
 		panic("bridge side type not set")
@@ -72,7 +72,7 @@ func normaliseConfig(c sideConfig) {
 }
 
 func describeClient(config sideConfig) string {
-	return fmt.Sprintf("%v:%v", config.Client.Host, config.Client.Port)
+	return fmt.Sprintf("%v:%v", config.Server.Host, config.Server.Port)
 }
 
 func describeSide(config sideConfig) string {
@@ -80,5 +80,13 @@ func describeSide(config sideConfig) string {
 }
 
 func describeBridge(b bridge) string {
-	return fmt.Sprintf("%v->%v", describeSide(b.Upstreams[0].Config), describeSide(b.Downstreams[0].Config))
+	return describeBridgeSideConfigs(b.Upstreams[0].Config, b.Downstreams[0].Config)
+}
+
+func describeBridgeConfig(bc bridgeConfig) string {
+	return describeBridgeSideConfigs(bc.Downstreams[0], bc.Upstreams[0])
+}
+
+func describeBridgeSideConfigs(uc sideConfig, dc sideConfig) string {
+	return fmt.Sprintf("%v->%v", describeSide(uc), describeSide(dc))
 }

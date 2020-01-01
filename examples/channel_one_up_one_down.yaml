@@ -5,7 +5,7 @@ bridges:
     upstreams:
       - name: input-chan
         type: pubsub
-        client:
+        server:
           host: upstream
           port: 6379
           password: password
@@ -13,7 +13,7 @@ bridges:
     downstreams:
       - name: output-chan
         type: pubsub
-        client:
+        server:
           host: downstream
           port: 6379
           password: password

@@ -1,5 +1,4 @@
-# Connect to a single instance of Redis exposed on localhost.
-# Propagate from a single upstream channel to a single downstream channel in the same Redis server.
+# Sets the maximum connection attempts to the server before giving up.
 bridges:
   local-test:
     upstreams:
@@ -9,6 +8,7 @@ bridges:
           host: localhost
           port: 6379
           password: password
+          connection_attempts: 3
 
     downstreams:
       - name: output-list
@@ -17,3 +17,4 @@ bridges:
           host: localhost
           port: 6379
           password: password
+          connection_attempts: 3

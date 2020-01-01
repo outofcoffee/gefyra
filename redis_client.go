@@ -1,71 +1,136 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/go-redis/redis"
 	"log"
 	"time"
 )
 
-type clientConfig struct {
-	Host     string
-	Port     int
-	Password string
+type serverConfig struct {
+	Host               string
+	Port               int
+	Password           string
+	ConnectionAttempts int `yaml:"connection_attempts"`
 }
 
-func cleanup(bridges []bridge) {
-	for _, b := range bridges {
-		for _, upstream := range b.Upstreams {
-			_ = upstream.Client.Close()
-		}
-		for _, downstream := range b.Downstreams {
-			_ = downstream.Client.Close()
-		}
-	}
-}
+var disconnectionRequests = make(chan side)
 
-func connect(config bridgeConfig) (upstreams []side, downstreams []side) {
+func connect(config bridgeConfig, control chan int) (upstreams []side, downstreams []side) {
 	log.Print("connecting to upstreams")
 	for _, c := range config.Upstreams {
-		upstreams = append(upstreams, side{
-			Config: c,
-			Client: connectSide(c),
-		})
+		upstreams = append(upstreams, connectSide(c, control))
 	}
 
 	log.Print("connecting to downstreams")
 	for _, c := range config.Downstreams {
-		downstreams = append(downstreams, side{
-			Config: c,
-			Client: connectSide(c),
-		})
+		downstreams = append(downstreams, connectSide(c, control))
 	}
 
 	return upstreams, downstreams
 }
 
-func connectSide(config sideConfig) *redis.Client {
-	log.Printf("initialising redis connection to %v", describeClient(config))
+func connectSide(config sideConfig, control chan int) side {
+	log.Printf("initialising connection to %v", describeClient(config))
 	client := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%v:%v", config.Client.Host, config.Client.Port),
-		Password: config.Client.Password,
+		Addr:     fmt.Sprintf("%v:%v", config.Server.Host, config.Server.Port),
+		Password: config.Server.Password,
 		DB:       0, // use default DB
 	})
 
-	// healthcheck
+	s := side{
+		Config: config,
+		Connection: &serverConnection{
+			Client: client,
+		},
+	}
+	err := ping(s, 1*time.Second, config.Server.ConnectionAttempts, true)
+	fatalIfError(err, "unable to connect")
+
+	monitorLiveness(control, s)
+	return s
+}
+
+func monitorLiveness(control chan int, s side) {
+	go func() {
+		defer signalFailure(control)
+		for {
+			time.Sleep(60 * time.Second)
+			if s.Connection.Client == nil {
+				// The client connection is no longer in use, so
+				// this healthcheck is no longer required.
+				break
+			}
+			err := ping(s, 0, 1, false)
+			if nil != err {
+				log.Printf("liveness check failed (%v)", err)
+				disconnectSide(s)
+				break
+			}
+		}
+	}()
+}
+
+func ping(s side, checkInterval time.Duration, maxAttempts int, logAttempt bool) error {
 	attempt := 0
 	for {
 		attempt++
-		log.Printf("checking redis connection [attempt #%v]...\n", attempt)
-		pong, err := client.Ping().Result()
+		if logAttempt {
+			log.Printf("checking connection [attempt #%v]...", attempt)
+		}
+		pong, err := s.Connection.Client.Ping().Result()
 		if err != nil || "PONG" != pong {
-			log.Printf("could not ping redis at %v - will retry\n", describeClient(config))
-			time.Sleep(1000 * time.Millisecond)
+			msg := fmt.Sprintf("could not ping server at %v", describeClient(s.Config))
+			if maxAttempts == 0 || attempt < maxAttempts {
+				log.Printf("%v - will retry in %v", msg, checkInterval)
+				time.Sleep(checkInterval)
+			} else {
+				return errors.New(fmt.Sprintf("%v after %v attempts: %v", msg, attempt, err))
+			}
 		} else {
-			log.Printf("redis connected at %v", describeClient(config))
+			if logAttempt {
+				log.Printf("connected to %v", describeClient(s.Config))
+			}
 			break
 		}
 	}
+	return nil
+}
 
-	return client
+func disconnectBridges(bridges []bridge) {
+	for _, b := range bridges {
+		disconnectBridge(b)
+	}
+}
+
+func disconnectBridge(b bridge) {
+	for _, upstream := range b.Upstreams {
+		if upstream.Connection.Client != nil {
+			disconnectSide(upstream)
+		}
+	}
+	for _, downstream := range b.Downstreams {
+		if downstream.Connection.Client != nil {
+			disconnectSide(downstream)
+		}
+	}
+}
+
+func disconnectSide(s side) {
+	disconnectionRequests <- s
+}
+
+// Ensures ordered access when disconnecting clients
+func startDisconnectionWorker() {
+	go func() {
+		for s := range disconnectionRequests {
+			if s.Connection.Client == nil {
+				continue
+			}
+			log.Printf("disconnecting %v", describeSide(s.Config))
+			_ = s.Connection.Client.Close()
+			s.Connection.Client = nil
+		}
+	}()
 }
