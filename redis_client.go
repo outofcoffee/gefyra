@@ -17,7 +17,7 @@ type serverConfig struct {
 
 var disconnectionRequests = make(chan side)
 
-func connect(config bridgeConfig, control chan int) (upstreams []side, downstreams []side) {
+func connect(control chan int, config bridgeConfig) (upstreams []side, downstreams []side) {
 	log.Print("connecting to upstreams")
 	for _, c := range config.Upstreams {
 		upstreams = append(upstreams, connectSide(c, control))
@@ -65,7 +65,6 @@ func monitorLiveness(control chan int, s side) {
 			err := ping(s, 0, 1, false)
 			if nil != err {
 				log.Printf("liveness check failed (%v)", err)
-				disconnectSide(s)
 				break
 			}
 		}

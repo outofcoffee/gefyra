@@ -20,16 +20,19 @@ func initBridge(wg *sync.WaitGroup, bridgeName string, bc bridgeConfig) bridge {
 		attempt := 0
 		for {
 			attempt++
-			log.Printf("starting bridge: %v [attempt #%v]", describeBridgeConfig(bc), attempt)
+			log.Printf("starting bridge: %v [generation #%v]", describeBridgeConfig(bc), attempt)
 
 			control := make(chan int)
-			upstreams, downstreams := connect(bc, control)
+			upstreams, downstreams := connect(control, bc)
 			b.Upstreams = upstreams
 			b.Downstreams = downstreams
 
 			err := bridgeUp(control, b)
 			fatalIfError(err, fmt.Sprintf("could not bring up bridge %v", describeBridge(b)))
 
+			// Wait for the control channel to be signalled, which indicates failure for this generation.
+			// Once this loop iteration ends, the channel falls out of scope, ensuring that
+			// subsequent signals for this generation are ignored.
 			<-control
 			log.Printf("bridge %v going down", describeBridge(b))
 			disconnectBridge(b)
