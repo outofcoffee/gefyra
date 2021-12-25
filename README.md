@@ -8,9 +8,24 @@ gefyra - a redis bridge for channels and lists
 
 ## Quickstart
 
-    docker run --rm -it -v /path/to/config/dir:/opt/gefyra/config outofcoffee/gefyra
+You can install the native binary for your operating system or use the Docker container.
 
-See [example](./examples) configurations.
+> See [example](./examples) configurations.
+
+### Option 1: Install using Homebrew
+
+Install:
+
+    brew tap outofcoffee/gefyra
+    brew install gefyra
+
+Run:
+
+    export BRIDGE_CONFIG=./examples/channel_fan_out.yaml gefyra
+
+### Option 2: Run using Docker
+
+    docker run --rm -it -v /path/to/config/dir:/opt/gefyra/config outofcoffee/gefyra
 
 ## Supported modes
 
